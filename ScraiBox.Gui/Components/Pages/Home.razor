@@ -1,0 +1,150 @@
+﻿@page "/"
+@using ScraiBox.Core
+@using CommunityToolkit.Maui.Storage
+
+<div class="container-fluid p-4">
+    <h2 class="mb-4 text-primary">🔮 ScraiBox Control Center</h2>
+
+    <div class="card mb-4 shadow-sm border-0 bg-dark text-light">
+        <div class="card-body d-flex align-items-center gap-3">
+            <button class="btn btn-info text-white" @onclick="PickFolder">
+                📁 Browse Project
+            </button>
+            <code class="text-info">@(string.IsNullOrEmpty(ProjectPath) ? "Select root directory..." : ProjectPath)</code>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">AI Response Interceptor</div>
+                <div class="card-body">
+                    <p class="small text-muted">Paste the message from LLM here to extract code automatically.</p>
+                    <textarea class="form-control mb-3" 
+                              style="height: 200px; font-family: 'Cascadia Code', monospace; font-size: 0.9rem;" 
+                              @bind="AiInput"
+                              placeholder="Example: I need to see <!cmd:scry:Core/Logic.cs>"></textarea>
+                    <button class="btn btn-primary w-100 py-2" @onclick="ProcessCommand">
+                        ⚡ Process & Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0" style="height: 335px;">
+                <div class="card-header bg-light">Activity Log</div>
+                <div class="card-body o-auto" style="overflow-y: auto;">
+                    @foreach (var log in Logs.AsEnumerable().Reverse())
+                    {
+                        <div class="border-bottom py-1 small">
+                            <span class="text-muted">[@DateTime.Now:HH:mm:ss]</span> @log
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string ProjectPath = "";
+    private string AiInput = "";
+    private List<string> Logs = new();
+    
+    // Manual instance since we are in a simple setup
+    private CommandInterceptor Interceptor = new();
+
+    private async Task PickFolder()
+    {
+        try 
+        {
+            var result = await FolderPicker.Default.PickAsync(CancellationToken.None);
+            if (result.IsSuccessful)
+            {
+                ProjectPath = result.Folder.Path;
+                Logs.Add("Project root linked successfully.");
+                await GenerateJsonMap();
+            }
+        }
+        catch (Exception ex) 
+        {
+            Logs.Add($"❌ Browser Error: {ex.Message}");
+        }
+    }
+
+    private async Task GenerateJsonMap()
+    {
+        try 
+        {
+            var mapper = new ProjectMapper(ProjectPath);
+            string jsonMap = mapper.GenerateJsonMap();
+            
+            // Adding instructions for the AI directly into the JSON or a companion file
+            string fullOutput = $"# INSTRUCTIONS\n" +
+                               $"If you need full code of any file, reply with: <!cmd:scry:relative_path>\n\n" +
+                               $"# PROJECT JSON MAP\n{jsonMap}";
+
+            string path = Path.Combine(ProjectPath, "project_map.md");
+            await File.WriteAllTextAsync(path, fullOutput);
+            
+            // Also copy the map to clipboard immediately so you can start the thread
+            await Clipboard.Default.SetTextAsync(fullOutput);
+            
+            Logs.Add("✅ Project Map (JSON + Instructions) generated and copied to clipboard!");
+        }
+        catch (Exception ex) 
+        {
+            Logs.Add($"❌ Mapper Error: {ex.Message}");
+        }
+    }
+
+    private async Task ProcessCommand()
+    {
+        if (string.IsNullOrWhiteSpace(ProjectPath)) 
+        {
+            Logs.Add("⚠️ Error: Select project folder first!");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(AiInput)) return;
+
+        // 1. Zachytíme všechny příkazy v textu
+        var commands = Interceptor.InterceptAll(AiInput);
+
+        if (commands.Count == 0)
+        {
+            Logs.Add("⚠️ No valid command found. Check the format: <!cmd:name:param>");
+            return;
+        }
+
+        // 2. Odfiltrujeme cesty pro 'scry'
+        var scryPaths = commands
+            .Where(c => c.Name.Equals("scry", StringComparison.OrdinalIgnoreCase))
+            .Select(c => c.Parameter)
+            .ToList();
+
+        if (scryPaths.Any())
+        {
+            var scryer = new ContextScryer(ProjectPath);
+        
+            // 3. Použijeme novou metodu pro hromadné čtení
+            string content = scryer.ScryMultiple(scryPaths);
+        
+            // 4. Uložíme výsledek do schránky
+            await Clipboard.Default.SetTextAsync(content);
+        
+            Logs.Add($"🚀 Success! Context for {scryPaths.Count} items is in your clipboard.");
+        
+            // Vyčistíme vstup, jen pokud jsme vše úspěšně zpracovali
+            AiInput = ""; 
+        }
+    
+        // 5. Tady je prostor pro další příkazy (reset, dth, atd.)
+        if (commands.Any(c => c.Name.Equals("reset", StringComparison.OrdinalIgnoreCase)))
+        {
+            // TODO: Implementovat logiku pro reset (např. vymazání logů nebo resetování session)
+            Logs.Add("🔄 Reset command detected (logic not implemented yet).");
+        }
+    }
+}

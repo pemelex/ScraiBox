@@ -1,3 +1,7 @@
 <Solution>
   <Project Path="ScraiBox.Console/ScraiBox.Console.csproj" />
+  <Project Path="ScraiBox.Core/ScraiBox.Core.csproj" />
+  <Project Path="ScraiBox.Gui/ScraiBox.Gui.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>
