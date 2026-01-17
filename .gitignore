@@ -1,0 +1,17 @@
+## Visual Studio Ignore
+*.user
+*.userosscache
+*.sln.docuser.tar
+.vs/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bin/
+obj/
+
+## Tooling
+.local
+.DS_Store
