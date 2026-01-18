@@ -57,6 +57,7 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Signatures": [
             "BuildInventory()",
             "Search()",
+            "FindFilesByClassNames()",
             "GetProjectName()"
           ]
         },
@@ -69,6 +70,17 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
             "GenerateJsonMap()",
             "ScanDirectory()",
             "ExtractSignatures()"
+          ]
+        },
+        {
+          "Name": "RoslynService.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Core\\RoslynService.cs",
+          "Children": [],
+          "Signatures": [
+            "GetUsedTypeNamesAsync()",
+            "ExtractActualTypes()",
+            "IsBasicType()"
           ]
         },
         {
@@ -378,6 +390,23 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Children": [],
           "Signatures": [
             "CreateMauiApp()"
+          ]
+        }
+      ],
+      "Signatures": []
+    },
+    {
+      "Name": "ScraiBox.Plugin.UC.Implementation",
+      "Type": "Folder",
+      "Path": "ScraiBox.Plugin.UC.Implementation",
+      "Children": [
+        {
+          "Name": "BlazorComponentEditUseCase.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Plugin.UC.Implementation\\BlazorComponentEditUseCase.cs",
+          "Children": [],
+          "Signatures": [
+            "ExecuteAsync()"
           ]
         }
       ],

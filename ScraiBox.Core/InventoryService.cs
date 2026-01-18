@@ -46,6 +46,16 @@ namespace ScraiBox.Core
                 .Take(20);
         }
 
+        /// Finds files that exactly match the provided class names (case-insensitive, ignoring extension).
+        /// </summary>
+        public IEnumerable<FileEntry> FindFilesByClassNames(ProjectInventory inventory, IEnumerable<string> classNames)
+        {
+            var nameSet = new HashSet<string>(classNames, StringComparer.OrdinalIgnoreCase);
+
+            return inventory.Files
+                .Where(f => nameSet.Contains(Path.GetFileNameWithoutExtension(f.Name)));
+        }
+
         private string GetProjectName(string filePath, string rootPath)
         {
             // Najde nejbližší složku, která obsahuje .csproj směrem nahoru k rootu

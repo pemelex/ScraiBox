@@ -8,5 +8,6 @@
   <Project Path="ScraiBox.Gui/ScraiBox.Gui.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
+  <Project Path="ScraiBox.Plugin.UC.Implementation/ScraiBox.Plugin.UC.Implementation.csproj" Id="2ee4aac0-176f-46df-9b99-0e459aeb0e26" />
   <Project Path="ScraiBox.Plugin.UC.System/ScraiBox.Plugin.UC.System.csproj" />
 </Solution>

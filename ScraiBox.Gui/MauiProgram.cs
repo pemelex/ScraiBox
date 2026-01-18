@@ -11,8 +11,10 @@ namespace ScraiBox.Gui
             var builder = MauiApp.CreateBuilder();
             builder.UseMauiApp<App>().UseMauiCommunityToolkit();
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddBlazorWebViewDeveloperTools();
 
             builder.Services.AddSingleton<InventoryService>();
+            builder.Services.AddSingleton<RoslynService>();
 
             // Registrace pluginů z konkrétní složky
             builder.Services.AddScraiBoxPlugins(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plugins"));

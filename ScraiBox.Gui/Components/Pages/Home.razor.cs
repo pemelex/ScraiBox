@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using ScraiBox.Core;
 using ScraiBox.Core.Interfaces.DTO;
+using ScraiBox.Plugin.UC.Implementation;
 using ScraiBox.Plugin.UC.System;
 using System;
 using System.Collections.Generic;
@@ -21,9 +22,12 @@ namespace ScraiBox.Gui.Components.Pages
 
         private InventoryService InventoryService { get; init; }
 
-        public Home(InventoryService inventoryService)
+        private RoslynService RoslynService { get; init; }
+
+        public Home(InventoryService inventoryService, RoslynService roslynService)
         {
             InventoryService = inventoryService;
+            RoslynService = roslynService;
         }
 
         private async Task PickFolder()
@@ -80,20 +84,28 @@ namespace ScraiBox.Gui.Components.Pages
 
             try
             {
+                var sbctx = new ScraiBoxContext
+                {
+                    ProjectRootPath = ProjectPath,
+                    RawInput = UseCaseTarget,
+                    Inventory = InventoryService.BuildInventory(ProjectPath)
+                };
+
                 // Tady zavoláš tu logiku, kterou jsme vymysleli
                 // Pro začátek to může být přímo v code-behind, než dořešíme DI
                 if (SelectedUseCase == "SelfHydration")
                 {
                     var uc = new SelfHydrationUseCase();
-                    var sbctx = new ScraiBoxContext 
-                    { 
-                        ProjectRootPath = ProjectPath,
-                        Inventory = InventoryService.BuildInventory(ProjectPath)
-                    };
                     var result = await uc.ExecuteAsync(sbctx);
-
                     await Clipboard.Default.SetTextAsync(result.OutputData);
                     Logs.Add("✅ Hydration anchor copied to clipboard!");
+                }
+                else if (SelectedUseCase == "BlazorEdit")
+                {
+                    var uc = new BlazorComponentEditUseCase(InventoryService, RoslynService);
+                    var result = await uc.ExecuteAsync(sbctx);
+                    await Clipboard.Default.SetTextAsync(result.OutputData);
+                    Logs.Add("✅ Blazor contextual data copied to clipboard!");
                 }
             }
             catch (Exception ex)
