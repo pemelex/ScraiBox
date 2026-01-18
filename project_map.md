@@ -50,6 +50,17 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           ]
         },
         {
+          "Name": "InventoryService.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Core\\InventoryService.cs",
+          "Children": [],
+          "Signatures": [
+            "BuildInventory()",
+            "Search()",
+            "GetProjectName()"
+          ]
+        },
+        {
           "Name": "ProjectMapper.cs",
           "Type": "File",
           "Path": "ScraiBox.Core\\ProjectMapper.cs",
@@ -59,6 +70,77 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
             "ScanDirectory()",
             "ExtractSignatures()"
           ]
+        },
+        {
+          "Name": "ScraiBoxPluginExtensions.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Core\\ScraiBoxPluginExtensions.cs",
+          "Children": [],
+          "Signatures": [
+            "AddScraiBoxPlugins()"
+          ]
+        }
+      ],
+      "Signatures": []
+    },
+    {
+      "Name": "ScraiBox.Core.Interfaces",
+      "Type": "Folder",
+      "Path": "ScraiBox.Core.Interfaces",
+      "Children": [
+        {
+          "Name": "DTO",
+          "Type": "Folder",
+          "Path": "ScraiBox.Core.Interfaces\\DTO",
+          "Children": [
+            {
+              "Name": "FileEntry.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\FileEntry.cs",
+              "Children": [],
+              "Signatures": [
+                "FileEntry()"
+              ]
+            },
+            {
+              "Name": "InterceptedCommand.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\InterceptedCommand.cs",
+              "Children": [],
+              "Signatures": [
+                "InterceptedCommand()"
+              ]
+            },
+            {
+              "Name": "ProjectInventory.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\ProjectInventory.cs",
+              "Children": [],
+              "Signatures": []
+            },
+            {
+              "Name": "ScraiBoxContext.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\ScraiBoxContext.cs",
+              "Children": [],
+              "Signatures": []
+            },
+            {
+              "Name": "ScraiBoxResult.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\ScraiBoxResult.cs",
+              "Children": [],
+              "Signatures": []
+            }
+          ],
+          "Signatures": []
+        },
+        {
+          "Name": "IUseCasePlugin.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Core.Interfaces\\IUseCasePlugin.cs",
+          "Children": [],
+          "Signatures": []
         }
       ],
       "Signatures": []
@@ -84,7 +166,20 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
               "Name": "Pages",
               "Type": "Folder",
               "Path": "ScraiBox.Gui\\Components\\Pages",
-              "Children": [],
+              "Children": [
+                {
+                  "Name": "Home.razor.cs",
+                  "Type": "File",
+                  "Path": "ScraiBox.Gui\\Components\\Pages\\Home.razor.cs",
+                  "Children": [],
+                  "Signatures": [
+                    "PickFolder()",
+                    "GenerateJsonMap()",
+                    "ExecuteSelectedUseCase()",
+                    "ProcessCommand()"
+                  ]
+                }
+              ],
               "Signatures": []
             }
           ],
@@ -283,6 +378,23 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Children": [],
           "Signatures": [
             "CreateMauiApp()"
+          ]
+        }
+      ],
+      "Signatures": []
+    },
+    {
+      "Name": "ScraiBox.Plugin.UC.System",
+      "Type": "Folder",
+      "Path": "ScraiBox.Plugin.UC.System",
+      "Children": [
+        {
+          "Name": "SelfHydrationUseCase.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Plugin.UC.System\\SelfHydrationUseCase.cs",
+          "Children": [],
+          "Signatures": [
+            "ExecuteAsync()"
           ]
         }
       ],

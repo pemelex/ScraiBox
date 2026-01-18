@@ -12,6 +12,11 @@ namespace ScraiBox.Gui
             builder.UseMauiApp<App>().UseMauiCommunityToolkit();
             builder.Services.AddMauiBlazorWebView();
 
+            builder.Services.AddSingleton<InventoryService>();
+
+            // Registrace pluginů z konkrétní složky
+            builder.Services.AddScraiBoxPlugins(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plugins"));
+
             // Register your Core tools
             // Default to a placeholder, we will update it via UI
             builder.Services.AddSingleton(new ProjectMapper(AppDomain.CurrentDomain.BaseDirectory));
