@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using ScraiBox.Core;
 using ScraiBox.Core.Interfaces.DTO;
+using ScraiBox.Plugin.UC.Analysis;
 using ScraiBox.Plugin.UC.Implementation;
 using ScraiBox.Plugin.UC.System;
 using System;
@@ -106,6 +107,20 @@ namespace ScraiBox.Gui.Components.Pages
                     var result = await uc.ExecuteAsync(sbctx);
                     await Clipboard.Default.SetTextAsync(result.OutputData);
                     Logs.Add("✅ Blazor contextual data copied to clipboard!");
+                }
+                else if (SelectedUseCase == "DeepContextTracer")
+                {
+                    var uc = new DeepContextTracerUseCase(InventoryService, RoslynService);
+                    var result = await uc.ExecuteAsync(sbctx);
+                    await Clipboard.Default.SetTextAsync(result.OutputData);
+                    Logs.Add("✅ Deep context trace data copied to clipboard!");
+                }
+                else if (SelectedUseCase == "MethodCallTree")
+                {
+                    var uc = new MethodCallTreeUseCase(InventoryService, RoslynService);
+                    var result = await uc.ExecuteAsync(sbctx);
+                    await Clipboard.Default.SetTextAsync(result.OutputData);
+                    Logs.Add("✅ Method call tree data copied to clipboard!");
                 }
             }
             catch (Exception ex)

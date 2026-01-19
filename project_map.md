@@ -80,6 +80,8 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Signatures": [
             "GetUsedTypeNamesAsync()",
             "ExtractActualTypes()",
+            "GetMethodCallsAsync()",
+            "GetMethodSourceCodeAsync()",
             "IsBasicType()"
           ]
         },
@@ -390,6 +392,33 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Children": [],
           "Signatures": [
             "CreateMauiApp()"
+          ]
+        }
+      ],
+      "Signatures": []
+    },
+    {
+      "Name": "ScraiBox.Plugin.UC.Analysis",
+      "Type": "Folder",
+      "Path": "ScraiBox.Plugin.UC.Analysis",
+      "Children": [
+        {
+          "Name": "DeepContextTracerUseCase.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Plugin.UC.Analysis\\DeepContextTracerUseCase.cs",
+          "Children": [],
+          "Signatures": [
+            "TraceCallsRecursive()"
+          ]
+        },
+        {
+          "Name": "MethodCallTreeUseCase.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Plugin.UC.Analysis\\MethodCallTreeUseCase.cs",
+          "Children": [],
+          "Signatures": [
+            "ExecuteAsync()",
+            "TraceCallsRecursive()"
           ]
         }
       ],

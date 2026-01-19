@@ -69,6 +69,55 @@ namespace ScraiBox.Core
                     break;
             }
         }
+
+        /// <summary>
+        /// Finds a method within a specific class and extracts its calls.
+        /// </summary>
+        public async Task<HashSet<string>> GetMethodCallsAsync(string code, string className, string methodName)
+        {
+            var tree = CSharpSyntaxTree.ParseText(code);
+            var root = await tree.GetRootAsync();
+            var calls = new HashSet<string>();
+
+            // 1. Find the class declaration first
+            var classDecl = root.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.Text == className);
+
+            if (classDecl == null) return calls;
+
+            // 2. Find the method within that class
+            var methodDecl = classDecl.DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.Identifier.Text == methodName);
+
+            if (methodDecl == null) return calls;
+
+            // 3. Extract invocations
+            var invocations = methodDecl.DescendantNodes().OfType<InvocationExpressionSyntax>();
+            foreach (var invocation in invocations)
+            {
+                calls.Add(invocation.Expression.ToString());
+                // Note: Full string representation helps us see "service.DoSomething"
+            }
+
+            return calls;
+        }
+
+        public async Task<string> GetMethodSourceCodeAsync(string code, string className, string methodName)
+        {
+            var tree = CSharpSyntaxTree.ParseText(code);
+            var root = await tree.GetRootAsync();
+
+            var method = root.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .Where(c => c.Identifier.Text == className)
+                .SelectMany(c => c.DescendantNodes().OfType<MethodDeclarationSyntax>())
+                .FirstOrDefault(m => m.Identifier.Text == methodName);
+
+            return method?.ToFullString() ?? "";
+        }
+
         private bool IsBasicType(string typeName) =>
             typeName is "string" or "int" or "bool" or "Task" or "void" or "DateTime" or "decimal" or "long" or "float" or "double" or "Guid" or "object" or "var";
     }

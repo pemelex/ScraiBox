@@ -67,6 +67,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ScraiBox.Core\ScraiBox.Core.csproj" />
+      <ProjectReference Include="..\ScraiBox.Plugin.UC.Analysis\ScraiBox.Plugin.UC.Analysis.csproj" />
       <ProjectReference Include="..\ScraiBox.Plugin.UC.Implementation\ScraiBox.Plugin.UC.Implementation.csproj" />
       <ProjectReference Include="..\ScraiBox.Plugin.UC.System\ScraiBox.Plugin.UC.System.csproj" />
     </ItemGroup>
