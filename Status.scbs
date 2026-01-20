@@ -1,30 +1,32 @@
-# ScraiBox Project State (.scbs)
+﻿# ScraiBox Project State (.scbs)
 
 ## Decisions Made
 - Architecture: Plugin-based, direct DI, NOT Event-Driven.
-- Tech Stack: .NET 10, MAUI/WASM GUI.
+- Tech Stack: .NET 10 (Runner), WinForms GUI.
 - Use-case plugins for smart context aggregation.
 - Storage: Use InventoryService for file mapping to avoid full-tree scans.
-- Solution Analysis: Use RoslynService for intelligent code analysis.
+- Solution Analysis: Use AdvancedRoslynService for intelligent code analysis.
+- Limitations: ScraiBox should be usable in environments with limited resources (e.g. VDI) and be able to analyse new NET 10 solutions as well
+- Target: ScraiBox should be able to analyse new NET 10 solutions as well older ones (incl. .NET Framework 4.8)
 
 ## Recent Files (Current Context)
-- `Home.razor` (GUI and Use Case integration)
-- `DeepContextTracerUseCase.cs` (Plugin for collecting deep method call tree)
-- `InventoryService.cs` (File scanning logic)
-- `RoslynService.cs` (GetUsedTypeNamesAsync, GetMethodCallsAsync, GetMethodSourceCodeAsync)
-- `ScraiBoxContext.cs` & `ScraiBoxResult.cs` (Core DTOs)
+- AdvancedRoslynService.cs (Core logic for AdhocWorkspace and Symbol analysis)
+- DeepContextTracerUseCase.cs (Recursive method call tracing)
+- InventoryService.cs (File scanning logic)
+- AdvancedRoslynService.cs (using AdhocWorkspace & SemanticModel for solution analysis)
+- ScraiBoxContext.cs & ScraiBoxResult.cs (Core DTOs)
 
 ## Status
-- Core infrastructure for plugins is alive.
-- Some plugins (SelfHydrationUseCase, BlazorComponentEditUseCase) are functional. DeepContextTracerUseCase needs some debugging.
-- Next: WinForms UI?
+Success: AdvancedRoslynService se kompiluje a běží. Dokáže propojit volání v rámci jedné třídy (např. v MainForm).
+Current Issue: Tracer končí příliš brzy (např. u metody Log). Je potřeba vyřešit "skákání" mezi projekty a identifikaci implementací za rozhraními (Interfaces).
+Infrastructure: Rozpracováno parsování .csproj pro automatickou detekci verzí a referencí.
 
 ## Pending Tasks
-1. [ ] Make the DeepContextTracerUseCase functional.
-2. [ ] Create WinForms UI as the MAUI is too heavy weight and slow.
-3. [ ] Implement saving of output to file.
+1. [ ] Complete the AdvancedRoslynService.GetDeepMethodCallsAsync for searching symbols across whole solution.
+2. [ ] Implement loading of references from packages.config and .csproj.
 3. [ ] Implement more UseCases.
 
 ## Instructions for AI");
 - Please acknowledge this context and use the `scry` commands to explore files as needed.
+- Keep the code comments in English.
 - Do not suggest event-driven patterns. Use the defined ScraiBoxContext and ScraiBoxResult.

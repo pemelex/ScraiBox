@@ -28,6 +28,23 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
       "Path": "ScraiBox.Core",
       "Children": [
         {
+          "Name": "AdvancedRoslynService.cs",
+          "Type": "File",
+          "Path": "ScraiBox.Core\\AdvancedRoslynService.cs",
+          "Children": [],
+          "Signatures": [
+            "InitializeFromInventory()",
+            "AddLegacyReferences()",
+            "AddModernReferences()",
+            "AnalyzeProjectFile()",
+            "GetDeepMethodCallsAsync()",
+            "GetSemanticModelAsync()",
+            "GetMethodCallsAsync()",
+            "GetExternalReferences()",
+            "GetMethodSourceCodeAsync()"
+          ]
+        },
+        {
           "Name": "CommandInterceptor.cs",
           "Type": "File",
           "Path": "ScraiBox.Core\\CommandInterceptor.cs",
@@ -129,6 +146,13 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
               "Name": "ProjectInventory.cs",
               "Type": "File",
               "Path": "ScraiBox.Core.Interfaces\\DTO\\ProjectInventory.cs",
+              "Children": [],
+              "Signatures": []
+            },
+            {
+              "Name": "ProjectMetadata.cs",
+              "Type": "File",
+              "Path": "ScraiBox.Core.Interfaces\\DTO\\ProjectMetadata.cs",
               "Children": [],
               "Signatures": []
             },
@@ -408,7 +432,9 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
           "Path": "ScraiBox.Plugin.UC.Analysis\\DeepContextTracerUseCase.cs",
           "Children": [],
           "Signatures": [
-            "TraceCallsRecursive()"
+            "ExecuteAsync()",
+            "TraceRecursive()",
+            "IsIgnoredSystemNamespace()"
           ]
         },
         {
@@ -463,6 +489,21 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
       "Type": "Folder",
       "Path": "ScraiBox.WinGui",
       "Children": [
+        {
+          "Name": "Properties",
+          "Type": "Folder",
+          "Path": "ScraiBox.WinGui\\Properties",
+          "Children": [
+            {
+              "Name": "PublishProfiles",
+              "Type": "Folder",
+              "Path": "ScraiBox.WinGui\\Properties\\PublishProfiles",
+              "Children": [],
+              "Signatures": []
+            }
+          ],
+          "Signatures": []
+        },
         {
           "Name": "MainForm.cs",
           "Type": "File",

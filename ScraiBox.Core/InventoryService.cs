@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml.Linq;
 
 namespace ScraiBox.Core
 {
@@ -56,6 +57,14 @@ namespace ScraiBox.Core
                 .Where(f => nameSet.Contains(Path.GetFileNameWithoutExtension(f.Name)));
         }
 
+        public IDictionary<string, List<FileEntry>> GetFilesByProject(ProjectInventory inventory)
+        {
+            return inventory.Files
+                .Where(f => f.Type == FileType.CSharp)
+                .GroupBy(f => f.ProjectName)
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
+
         private string GetProjectName(string filePath, string rootPath)
         {
             // Najde nejbližší složku, která obsahuje .csproj směrem nahoru k rootu
@@ -70,5 +79,6 @@ namespace ScraiBox.Core
             }
             return "Unknown";
         }
+
     }
 }

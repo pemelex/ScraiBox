@@ -1,0 +1,479 @@
+# DEEP CONTEXT TRACE: MainForm.btnRunUseCase_Click
+Generated: 1/20/2026 5:35:42 PM
+---
+## METHOD: MainForm.btnRunUseCase_Click (LOCAL)
+```csharp
+
+        // Handler pro spouštění Use Casů (DeepContextTracer atd.)
+        private async void btnRunUseCase_Click(object sender, EventArgs e)
+        {
+            btnRunUseCase.Enabled = false;
+            try
+            {
+                await ExecuteUseCase();
+            }
+            finally
+            {
+                btnRunUseCase.Enabled = true;
+            }
+        }
+
+```
+  ## METHOD: MainForm.ExecuteUseCase (LOCAL)
+  ```csharp
+  
+          private async Task ExecuteUseCase()
+          {
+              if (string.IsNullOrEmpty(_projectPath))
+              {
+                  Log("⚠️ Select project folder first!");
+                  return;
+              }
+  
+              var selected = comboUseCase.SelectedItem!.ToString();
+              var context = new ScraiBoxContext
+              {
+                  ProjectRootPath = _projectPath,
+                  RawInput = txtTarget.Text,
+                  Inventory = _inventoryService.BuildInventory(_projectPath)
+              };
+  
+              try
+              {
+                  ScraiBoxResult result = selected switch
+                  {
+                      "SelfHydration" => await new SelfHydrationUseCase().ExecuteAsync(context),
+                      "DeepContextTracer" => await new DeepContextTracerUseCase(_advanceRoslynService).ExecuteAsync(context),
+                      "BlazorEdit" => await new BlazorComponentEditUseCase(_inventoryService, _roslynService).ExecuteAsync(context),
+                      "MethodCallTree" => await new MethodCallTreeUseCase(_inventoryService, _roslynService).ExecuteAsync(context),
+                      _ => throw new NotImplementedException()
+                  };
+  
+                  Clipboard.SetText(result.OutputData);
+                  Log($"✅ {selected} data copied to clipboard!");
+              }
+              catch (Exception ex)
+              {
+                  Log($"❌ ERROR: {ex.Message}");
+                  Log($"📍 SOURCE: {ex.TargetSite}");
+                  Log($"📜 STACK: {ex.StackTrace}");
+              }
+          }
+  
+  ```
+    ## METHOD: MainForm.Log (LOCAL)
+    ```csharp
+    
+            private void Log(string message)
+            {
+                // WinForms vyžaduje Invoke, pokud logujeme z jiného vlákna
+                if (lstLogs.InvokeRequired)
+                {
+                    lstLogs.Invoke(() => Log(message));
+                    return;
+                }
+                lstLogs.Items.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {message}");
+            }
+    
+    ```
+      ## METHOD: Control.Invoke (NOT FOUND)
+      ## METHOD: ObjectCollection.Insert (NOT FOUND)
+    ## METHOD: Object.ToString (NOT FOUND)
+    ## METHOD: InventoryService.BuildInventory (LOCAL)
+    ```csharp
+            public ProjectInventory BuildInventory(string rootPath)
+            {
+                var inventory = new ProjectInventory { LastUpdated = DateTime.Now };
+                var rootDir = new DirectoryInfo(rootPath);
+    
+                var extensions = new Dictionary<string, FileType>
+            {
+                { ".cs", FileType.CSharp },
+                { ".razor", FileType.Razor },
+                { ".json", FileType.Json },
+                { ".csproj", FileType.Project }
+            };
+    
+                var files = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"));
+    
+                foreach (var file in files)
+                {
+                    var ext = Path.GetExtension(file).ToLower();
+                    if (extensions.TryGetValue(ext, out var type))
+                    {
+                        inventory.Files.Add(new FileEntry(
+                            Path.GetFileName(file),
+                            Path.GetRelativePath(rootPath, file),
+                            type,
+                            GetProjectName(file, rootPath)
+                        ));
+                    }
+                }
+                return inventory;
+            }
+    
+    ```
+    ## METHOD: SelfHydrationUseCase.ExecuteAsync (LOCAL)
+    ```csharp
+    
+            public async Task<ScraiBoxResult> ExecuteAsync(ScraiBoxContext context)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("# SCRAIBOX SESSION RESUMPTION ANCHOR");
+                sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm}");
+                sb.AppendLine();
+    
+                sb.AppendLine("## 1. Project Context");
+                sb.AppendLine($"Project: {new DirectoryInfo(context.ProjectRootPath).Name}");
+                sb.AppendLine($"Time: {DateTime.Now:G}");
+                sb.AppendLine($"- Root: `{context.ProjectRootPath}`");
+    
+                sb.AppendLine("\n--- INVENTORY SUMMARY ---");
+                var projects = context.Inventory != null ? 
+                    context.Inventory.Files.Select(f => f.ProjectName).Distinct().ToList() :
+                    new List<string>();
+    
+                sb.AppendLine($"- Detected Projects: {string.Join(", ", projects)}");
+                sb.AppendLine();
+    
+                // Cesta k souboru v rootu
+                string statusFilePath = Path.Combine(context.ProjectRootPath, "Status.scbs");
+                string statusContent = "No status file found. Please create Status.scbs in root.";
+    
+                if (File.Exists(statusFilePath))
+                {
+                    statusContent = await File.ReadAllTextAsync(statusFilePath);
+                }
+    
+                sb.AppendLine("\n--- PROJECT STATUS ---");
+                sb.AppendLine(statusContent);
+    
+                return new ScraiBoxResult
+                {
+                    IsSuccess = true,
+                    Message = "Hydration anchor generated. Copy the output to a new chat thread.",
+                    OutputData = sb.ToString()
+                };
+            }
+    
+    ```
+      ## METHOD: StringBuilder.AppendLine (NOT FOUND)
+      ## METHOD: StringBuilder.ToString (NOT FOUND)
+    ## METHOD: DeepContextTracerUseCase.ExecuteAsync (LOCAL)
+    ```csharp
+    
+            public async Task<ScraiBoxResult> ExecuteAsync(ScraiBoxContext context)
+            {
+                // Expected format: Namespace.SubNamespace.ClassName.MethodName
+                var target = context.RawInput;
+                var parts = target.Split('.');
+    
+                if (parts.Length < 2)
+                {
+                    return new ScraiBoxResult { IsSuccess = false, Message = "Target must be in 'ClassName.MethodName' format." };
+                }
+    
+                string startMethod = parts[^1];
+                string startClass = parts[^2];
+    
+                _roslynService.InitializeFromInventory(context.Inventory!, context.ProjectRootPath);
+    
+                var visitedMethods = new HashSet<string>();
+                var traceOutput = new StringBuilder();
+    
+                traceOutput.AppendLine($"# DEEP CONTEXT TRACE: {startClass}.{startMethod}");
+                traceOutput.AppendLine($"Generated: {DateTime.Now}");
+                traceOutput.AppendLine("---");
+    
+                await TraceRecursive(startClass, startMethod, 0, visitedMethods, traceOutput);
+    
+                var outputData = traceOutput.ToString();
+                // Implementace uložení do souboru podle backlogu
+                File.WriteAllText(Path.Combine(context.ProjectRootPath, "DeepContextTrace.txt"), outputData);
+    
+                return new ScraiBoxResult
+                {
+                    IsSuccess = true,
+                    OutputData = outputData,
+                    Message = $"Call tree generated for {startClass}{startMethod}."
+                };
+            }
+    
+    ```
+      ## METHOD: AdvancedRoslynService.InitializeFromInventory (LOCAL)
+      ```csharp
+      
+              public void InitializeFromInventory(ProjectInventory inventory, string rootPath)
+              {
+                  _workspace = new AdhocWorkspace();
+                  var solution = _workspace.CurrentSolution;
+      
+                  var projectGroups = inventory.Files
+                      .Where(f => f.Type == FileType.CSharp)
+                      .GroupBy(f => f.ProjectName)
+                      .ToList();
+      
+                  foreach (var projectGroup in projectGroups)
+                  {
+                      // Najdeme .csproj soubor pro tento projekt v inventáři
+                      var projectFile = inventory.Files.FirstOrDefault(f => f.ProjectName == projectGroup.Key && f.Type == FileType.Project);
+                      ProjectMetadata? metadata = null;
+      
+                      if (projectFile != null)
+                      {
+                          metadata = AnalyzeProjectFile(Path.Combine(rootPath, projectFile.RelativePath));
+                      }
+      
+                      var projectId = ProjectId.CreateNewId();
+                      var projectInfo = ProjectInfo.Create(
+                          projectId,
+                          VersionStamp.Create(),
+                          projectGroup.Key,
+                          projectGroup.Key,
+                          LanguageNames.CSharp);
+      
+                      solution = solution.AddProject(projectInfo);
+      
+                      // Aplikace referencí podle typu frameworku
+                      if (metadata != null && metadata.IsLegacy)
+                      {
+                          solution = AddLegacyReferences(solution, projectId);
+                      }
+                      else
+                      {
+                          solution = AddModernReferences(solution, projectId);
+                      }
+      
+                      // Přidání .cs souborů
+                      foreach (var file in projectGroup)
+                      {
+                          var sourceText = SourceText.From(File.ReadAllText(Path.Combine(rootPath, file.RelativePath)));
+                          solution = solution.AddDocument(DocumentId.CreateNewId(projectId), file.Name, sourceText);
+                      }
+                  }
+      
+                  _workspace.TryApplyChanges(solution);
+              }
+      
+      ```
+      ## METHOD: DeepContextTracerUseCase.TraceRecursive (LOCAL)
+      ```csharp
+      
+              private async Task TraceRecursive(string className, string methodName, int depth, HashSet<string> visited, StringBuilder output)
+              {
+                  string fullId = $"{className}.{methodName}";
+      
+                  // Ochrana proti nekonečné rekurzi a limit hloubky
+                  if (depth > _maxDepth || visited.Contains(fullId)) return;
+                  visited.Add(fullId);
+      
+                  var indent = new string(' ', depth * 2);
+      
+                  // 1. Získáme detailní informace o metodě skrze sémantický model
+                  // Předpokládáme, že jsme do AdvancedRoslynService přidali metodu GetMethodDetailsByNameAsync
+                  var methodDetails = await _roslynService.GetMethodDetailsByNameAsync(className, methodName);
+      
+                  if (methodDetails == null)
+                  {
+                      // Metodu se nepodařilo v solution najít (může jít o dynamické volání nebo chybu v indexu)
+                      output.AppendLine($"{indent}## METHOD: {fullId} (NOT FOUND)");
+                      return;
+                  }
+      
+                  // 2. Vypíšeme hlavičku a kód, pokud je lokální
+                  if (methodDetails.Value.IsLocal)
+                  {
+                      output.AppendLine($"{indent}## METHOD: {fullId} (LOCAL)");
+                      if (!string.IsNullOrEmpty(methodDetails.Value.SourceCode))
+                      {
+                          output.AppendLine($"{indent}```csharp");
+                          // Přidáme odsazení i pro samotný kód, aby byl Markdown přehledný
+                          var indentedSource = string.Join("\n", methodDetails.Value.SourceCode.Split('\n').Select(line => indent + line));
+                          output.AppendLine(indentedSource);
+                          output.AppendLine($"{indent}```");
+                      }
+      
+                      // 3. Pokračujeme v rekurzi POUZE u lokálního kódu
+                      var calls = await _roslynService.GetDeepMethodCallsAsync(className, methodName);
+                      foreach (var call in calls)
+                      {
+                          // Ignorujeme volání, která už známe jako systémová (např. String.IsNullOrEmpty)
+                          // nebo ta, která neobsahují tečku (nevalidní formát)
+                          if (!call.Contains('.') || IsIgnoredSystemNamespace(call))
+                          {
+                              if (!IsIgnoredSystemNamespace(call))
+                                  output.AppendLine($"{indent}  -> CALL: {call} (EXTERNAL)");
+                              continue;
+                          }
+      
+                          var parts = call.Split('.');
+                          string nextClass = parts[0];
+                          string nextMethod = parts[1];
+      
+                          await TraceRecursive(nextClass, nextMethod, depth + 1, visited, output);
+                      }
+                  }
+                  else
+                  {
+                      // Externí volání (Framework, NuGet) – jen zapíšeme, že proběhlo
+                      output.AppendLine($"{indent}## METHOD: {fullId} (EXTERNAL/SYSTEM)");
+                  }
+              }
+      
+      ```
+    ## METHOD: BlazorComponentEditUseCase.ExecuteAsync (LOCAL)
+    ```csharp
+    
+            public async Task<ScraiBoxResult> ExecuteAsync(ScraiBoxContext context)
+            {
+                // 1. Get the target component name from context (e.g., "Home")
+                var componentName = context.RawInput;
+                var inventory = context.Inventory;
+    
+                // 2. Find the primary files (.razor and .razor.cs)
+                var primaryFiles = _inventoryService.Search(inventory, componentName)
+                    .Where(f => f.Name.EndsWith(".razor") || f.Name.EndsWith(".razor.cs"))
+                    .ToList();
+    
+                var resultContext = new StringBuilder();
+                var allFoundFiles = new List<string>();
+    
+                foreach (var file in primaryFiles)
+                {
+                    var fullPath = Path.Combine(context.ProjectRootPath, file.RelativePath);
+                    var content = await File.ReadAllTextAsync(fullPath);
+    
+                    resultContext.AppendLine($"--- FILE: {file.RelativePath} ---");
+                    resultContext.AppendLine(content);
+                    allFoundFiles.Add(file.RelativePath);
+    
+                    // 3. If it's a C# file, analyze it for dependencies
+                    if (file.Type == FileType.CSharp)
+                    {
+                        var dependencies = await _roslynService.GetUsedTypeNamesAsync(content);
+                        var depFiles = _inventoryService.FindFilesByClassNames(inventory, dependencies);
+    
+                        foreach (var dep in depFiles)
+                        {
+                            if (allFoundFiles.Contains(dep.RelativePath)) continue;
+    
+                            var depPath = Path.Combine(context.ProjectRootPath, dep.RelativePath);
+                            var depContent = await File.ReadAllTextAsync(depPath);
+    
+                            resultContext.AppendLine($"--- DEPENDENCY: {dep.RelativePath} ---");
+                            resultContext.AppendLine(depContent);
+                            allFoundFiles.Add(dep.RelativePath);
+                        }
+                    }
+                }
+    
+                return new ScraiBoxResult
+                {
+                    IsSuccess = true,
+                    OutputData = resultContext.ToString(),
+                    Message = $"Aggregated {allFoundFiles.Count} files for component {componentName}"
+                };
+            }
+    
+    ```
+      ## METHOD: InventoryService.Search (LOCAL)
+      ```csharp
+      
+              public IEnumerable<FileEntry> Search(ProjectInventory inventory, string term)
+              {
+                  return inventory.Files
+                      .Where(f => f.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+                      .Take(20);
+              }
+      
+      ```
+    ## METHOD: MethodCallTreeUseCase.ExecuteAsync (LOCAL)
+    ```csharp
+    
+            public async Task<ScraiBoxResult> ExecuteAsync(ScraiBoxContext context)
+            {
+                // Expected format: Namespace.SubNamespace.ClassName.MethodName
+                var target = context.RawInput;
+                var parts = target.Split('.');
+    
+                if (parts.Length < 2)
+                {
+                    return new ScraiBoxResult { IsSuccess = false, Message = "Target must be in 'ClassName.MethodName' format." };
+                }
+    
+                string methodName = parts[^1];
+                string className = parts[^2];
+    
+                var inventory = context.Inventory;
+                var resultBuilder = new StringBuilder();
+                var visitedMethods = new HashSet<string>();
+    
+                resultBuilder.AppendLine($"# Method Call Tree for: {target}");
+    
+                await TraceCallsRecursive(className, methodName, inventory, context.ProjectRootPath, resultBuilder, visitedMethods, 0);
+    
+                return new ScraiBoxResult
+                {
+                    IsSuccess = true,
+                    OutputData = resultBuilder.ToString(),
+                    Message = $"Call tree generated for {methodName}."
+                };
+            }
+    
+    ```
+      ## METHOD: MethodCallTreeUseCase.TraceCallsRecursive (LOCAL)
+      ```csharp
+      
+              protected virtual async Task TraceCallsRecursive(string className, string methodName, ProjectInventory inventory, string rootPath, StringBuilder sb, HashSet<string> visited, int depth)
+              {
+                  string key = $"{className}.{methodName}";
+                  if (visited.Contains(key) || depth > 5) return; // Increased depth for enterprise code 
+                  visited.Add(key);
+      
+                  var indentation = new string(' ', depth * 4);
+                  sb.AppendLine($"{indentation}* {className}.{methodName}");
+      
+                  var files = _inventoryService.FindFilesByClassNames(inventory, new[] { className });
+                  var file = files.FirstOrDefault();
+                  if (file == null) return;
+      
+                  var fullPath = Path.Combine(rootPath, file.RelativePath);
+                  if (!File.Exists(fullPath)) return;
+      
+                  var code = await File.ReadAllTextAsync(fullPath);
+                  var calls = await _roslynService.GetMethodCallsAsync(code, className, methodName);
+      
+                  foreach (var call in calls)
+                  {
+                      string nextClass = className; // Default to current class for internal calls
+                      string nextMethod = "";
+      
+                      // Remove "await " if present
+                      var cleanCall = call.Replace("await ", "").Trim();
+                      var callParts = cleanCall.Split('.');
+      
+                      if (callParts.Length >= 2)
+                      {
+                          // Case: instance.Method() or this.Method()
+                          nextClass = callParts[0]
+                              .Replace("this", className)
+                              .Replace("_", ""); // Heuristic for private fields like _walletService -> WalletService
+      
+                          // Basic cleanup for method name (remove arguments)
+                          nextMethod = callParts[1].Split('(')[0];
+                      }
+                      else
+                      {
+                          // Case: Method() -> internal call within the same class
+                          nextMethod = callParts[0].Split('(')[0];
+                      }
+      
+                      if (!string.IsNullOrEmpty(nextMethod))
+                      {
+                          await TraceCallsRecursive(nextClass, nextMethod, inventory, rootPath, sb, visited, depth + 1);
+                      }
+                  }
+              }
+      
+      ```

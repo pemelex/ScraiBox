@@ -11,6 +11,7 @@ namespace ScraiBox.WinGui
         private string _projectPath = "";
         private InventoryService _inventoryService = new();
         private RoslynService _roslynService = new();
+        private AdvancedRoslynService _advanceRoslynService = new();
         private CommandInterceptor _interceptor = new();
 
         public MainForm()
@@ -119,7 +120,7 @@ namespace ScraiBox.WinGui
                 ScraiBoxResult result = selected switch
                 {
                     "SelfHydration" => await new SelfHydrationUseCase().ExecuteAsync(context),
-                    "DeepContextTracer" => await new DeepContextTracerUseCase(_inventoryService, _roslynService).ExecuteAsync(context),
+                    "DeepContextTracer" => await new DeepContextTracerUseCase(_advanceRoslynService).ExecuteAsync(context),
                     "BlazorEdit" => await new BlazorComponentEditUseCase(_inventoryService, _roslynService).ExecuteAsync(context),
                     "MethodCallTree" => await new MethodCallTreeUseCase(_inventoryService, _roslynService).ExecuteAsync(context),
                     _ => throw new NotImplementedException()

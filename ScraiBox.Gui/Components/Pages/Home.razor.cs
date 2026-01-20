@@ -25,10 +25,14 @@ namespace ScraiBox.Gui.Components.Pages
 
         private RoslynService RoslynService { get; init; }
 
-        public Home(InventoryService inventoryService, RoslynService roslynService)
+
+        private AdvancedRoslynService AdvancedRoslynService { get; init; }
+
+        public Home(InventoryService inventoryService, AdvancedRoslynService advancedRoslynService, RoslynService roslynService)
         {
             InventoryService = inventoryService;
             RoslynService = roslynService;
+            AdvancedRoslynService = advancedRoslynService;
         }
 
         private async Task PickFolder()
@@ -110,7 +114,7 @@ namespace ScraiBox.Gui.Components.Pages
                 }
                 else if (SelectedUseCase == "DeepContextTracer")
                 {
-                    var uc = new DeepContextTracerUseCase(InventoryService, RoslynService);
+                    var uc = new DeepContextTracerUseCase(AdvancedRoslynService);
                     var result = await uc.ExecuteAsync(sbctx);
                     await Clipboard.Default.SetTextAsync(result.OutputData);
                     Logs.Add("✅ Deep context trace data copied to clipboard!");
