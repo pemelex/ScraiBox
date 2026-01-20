@@ -48,20 +48,30 @@ namespace ScraiBox.Plugin.UC.Analysis
                 string nextClass = className; // Výchozí: volání v rámci stejné třídy
                 string nextMethod = "";
 
+                // Vylepšená část uvnitř foreach (var call in calls)
                 var cleanCall = call.Replace("await ", "").Trim();
                 var callParts = cleanCall.Split('.');
 
                 if (callParts.Length >= 2)
                 {
-                    // Detekce: this.Metoda() nebo instance.Metoda()
-                    string potentialClass = callParts[0]
-                        .Replace("this", className)
-                        .Replace("_", ""); // heuristika pro _service
+                    // 1. Zkusíme zjistit, zda je to volání na poli (např. _inventoryService.Find...)
+                    string instanceName = callParts[0].TrimStart('_');
 
-                    // Tady je ten trik: Zkusíme, jestli to 'potentialClass' známe v Inventory
-                    // Pokud ne, pravděpodobně je to jen lokální proměnná a ne třída, 
-                    // tak zůstaneme u aktuální třídy (pro případ interních hovorů přes this.)
-                    nextClass = potentialClass;
+                    // 2. Agresivní pokus o nalezení třídy:
+                    // Zkusíme vzít název instance a udělat z něj PascalCase (častý pattern pro DI)
+                    string guessedClass = char.ToUpper(instanceName[0]) + instanceName.Substring(1);
+
+                    // 3. Ověření v Inventory - pokud guessedClass neexistuje, 
+                    // zkusíme, jestli callParts[0] není přímo název třídy (statické volání)
+                    if (_inventoryService.FindFilesByClassNames(inventory, new[] { guessedClass }).Any())
+                    {
+                        nextClass = guessedClass;
+                    }
+                    else if (_inventoryService.FindFilesByClassNames(inventory, new[] { callParts[0] }).Any())
+                    {
+                        nextClass = callParts[0];
+                    }
+
                     nextMethod = callParts[1].Split('(')[0];
                 }
                 else

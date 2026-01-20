@@ -11,4 +11,5 @@
   <Project Path="ScraiBox.Plugin.UC.Analysis/ScraiBox.Plugin.UC.Analysis.csproj" Id="68cf0aa9-b904-4583-a48e-5f1f5f97a13f" />
   <Project Path="ScraiBox.Plugin.UC.Implementation/ScraiBox.Plugin.UC.Implementation.csproj" Id="2ee4aac0-176f-46df-9b99-0e459aeb0e26" />
   <Project Path="ScraiBox.Plugin.UC.System/ScraiBox.Plugin.UC.System.csproj" />
+  <Project Path="ScraiBox.WinGui/ScraiBox.WinGui.csproj" Id="cfe6db50-576e-4f18-8d73-e5b9ab4922b3" />
 </Solution>

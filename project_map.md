@@ -457,6 +457,47 @@ If you need full code of any file, reply with: <!cmd:scry:relative_path>
         }
       ],
       "Signatures": []
+    },
+    {
+      "Name": "ScraiBox.WinGui",
+      "Type": "Folder",
+      "Path": "ScraiBox.WinGui",
+      "Children": [
+        {
+          "Name": "MainForm.cs",
+          "Type": "File",
+          "Path": "ScraiBox.WinGui\\MainForm.cs",
+          "Children": [],
+          "Signatures": [
+            "btnBrowse_Click()",
+            "btnProcess_Click()",
+            "btnRunUseCase_Click()",
+            "ProcessCommand()",
+            "ExecuteUseCase()",
+            "GenerateJsonMap()",
+            "Log()"
+          ]
+        },
+        {
+          "Name": "MainForm.Designer.cs",
+          "Type": "File",
+          "Path": "ScraiBox.WinGui\\MainForm.Designer.cs",
+          "Children": [],
+          "Signatures": [
+            "InitializeComponent()"
+          ]
+        },
+        {
+          "Name": "Program.cs",
+          "Type": "File",
+          "Path": "ScraiBox.WinGui\\Program.cs",
+          "Children": [],
+          "Signatures": [
+            "Main()"
+          ]
+        }
+      ],
+      "Signatures": []
     }
   ],
   "Signatures": []

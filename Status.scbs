@@ -1,31 +1,29 @@
 # ScraiBox Project State (.scbs)
 
-## Current Focus
-- Implementing the Use Case plugin system and Inventory scanning.
-- Setting up the "Self-Hydration" mechanism.
-
 ## Decisions Made
 - Architecture: Plugin-based, direct DI, NOT Event-Driven.
 - Tech Stack: .NET 10, MAUI/WASM GUI.
 - Use-case plugins for smart context aggregation.
-- Projects: ScraiBox.Core.Interfaces (DTOs), ScraiBox.Plugin.* (Logic).
-- Storage: Use "Inventory" for file mapping to avoid full-tree scans.
+- Storage: Use InventoryService for file mapping to avoid full-tree scans.
+- Solution Analysis: Use RoslynService for intelligent code analysis.
 
 ## Recent Files (Current Context)
 - `Home.razor` (GUI and Use Case integration)
-- `SelfHydrationUseCase.cs` (Plugin logic)
+- `DeepContextTracerUseCase.cs` (Plugin for collecting deep method call tree)
 - `InventoryService.cs` (File scanning logic)
+- `RoslynService.cs` (GetUsedTypeNamesAsync, GetMethodCallsAsync, GetMethodSourceCodeAsync)
 - `ScraiBoxContext.cs` & `ScraiBoxResult.cs` (Core DTOs)
 
 ## Status
 - Core infrastructure for plugins is alive.
-- First system plugin (Hydration) is functional.
-- Next: Connect Inventory to GUI for autocomplete.
+- Some plugins (SelfHydrationUseCase, BlazorComponentEditUseCase) are functional. DeepContextTracerUseCase needs some debugging.
+- Next: WinForms UI?
 
 ## Pending Tasks
-1. [ ] Finalize InventoryService registration in GUI. Auto-complete for Use Case targets.
-2. [ ] Create a UI panel for selecting and running Use Cases.
-3. [ ] Implement Roslyn-based context aggregator.
+1. [ ] Make the DeepContextTracerUseCase functional.
+2. [ ] Create WinForms UI as the MAUI is too heavy weight and slow.
+3. [ ] Implement saving of output to file.
+3. [ ] Implement more UseCases.
 
 ## Instructions for AI");
 - Please acknowledge this context and use the `scry` commands to explore files as needed.

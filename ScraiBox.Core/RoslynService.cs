@@ -17,59 +17,42 @@ namespace ScraiBox.Core
             var root = await tree.GetRootAsync();
             var usedTypes = new HashSet<string>();
 
-            // Extract type nodes from properties and parameters
             var propertyTypes = root.DescendantNodes().OfType<PropertyDeclarationSyntax>().Select(p => p.Type);
             var parameterTypes = root.DescendantNodes().OfType<ParameterSyntax>().Select(p => p.Type);
 
             foreach (var typeSyntax in propertyTypes.Concat(parameterTypes))
             {
                 if (typeSyntax == null) continue;
-
                 foreach (var extractedType in ExtractActualTypes(typeSyntax))
                 {
-                    // Filter out primitive types and common .NET types
                     if (!IsBasicType(extractedType))
                         usedTypes.Add(extractedType);
                 }
             }
-
             return usedTypes;
         }
 
-        /// <summary>
-        /// Recursively extracts type names from complex TypeSyntax (generics, arrays, qualified names)
-        /// </summary>
         private IEnumerable<string> ExtractActualTypes(TypeSyntax typeSyntax)
         {
             switch (typeSyntax)
             {
-                // Must be BEFORE SimpleNameSyntax because GenericNameSyntax inherits from it
                 case GenericNameSyntax genericName:
                     yield return genericName.Identifier.Text;
                     foreach (var argument in genericName.TypeArgumentList.Arguments)
-                    {
-                        foreach (var nestedType in ExtractActualTypes(argument))
-                            yield return nestedType;
-                    }
+                        foreach (var nestedType in ExtractActualTypes(argument)) yield return nestedType;
                     break;
-
                 case SimpleNameSyntax simpleName:
                     yield return simpleName.Identifier.Text;
                     break;
-
                 case ArrayTypeSyntax arrayType:
-                    foreach (var nestedType in ExtractActualTypes(arrayType.ElementType))
-                        yield return nestedType;
+                    foreach (var nestedType in ExtractActualTypes(arrayType.ElementType)) yield return nestedType;
                     break;
-
                 case QualifiedNameSyntax qualifiedName:
                     yield return qualifiedName.Right.Identifier.Text;
-                    foreach (var nestedType in ExtractActualTypes(qualifiedName.Left))
-                        yield return nestedType;
+                    foreach (var nestedType in ExtractActualTypes(qualifiedName.Left)) yield return nestedType;
                     break;
             }
         }
-
         /// <summary>
         /// Finds a method within a specific class and extracts its calls.
         /// </summary>
@@ -79,26 +62,62 @@ namespace ScraiBox.Core
             var root = await tree.GetRootAsync();
             var calls = new HashSet<string>();
 
-            // 1. Find the class declaration first
             var classDecl = root.DescendantNodes()
                 .OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.Text == className);
 
             if (classDecl == null) return calls;
 
-            // 2. Find the method within that class
+            // 1. Mapa členů třídy pro identifikaci typů proměnných
+            var memberMap = new Dictionary<string, string>();
+            foreach (var field in classDecl.DescendantNodes().OfType<FieldDeclarationSyntax>())
+            {
+                var typeName = field.Declaration.Type.ToString();
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    memberMap[variable.Identifier.Text] = typeName;
+                }
+            }
+
             var methodDecl = classDecl.DescendantNodes()
                 .OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault(m => m.Identifier.Text == methodName);
 
             if (methodDecl == null) return calls;
 
-            // 3. Extract invocations
+            // 2. Extrahuje volání metod (včetně těch uvnitř switch výrazů)
             var invocations = methodDecl.DescendantNodes().OfType<InvocationExpressionSyntax>();
             foreach (var invocation in invocations)
             {
-                calls.Add(invocation.Expression.ToString());
-                // Note: Full string representation helps us see "service.DoSomething"
+                var expression = invocation.Expression;
+
+                // Případ: new SomeUseCase().ExecuteAsync(...)
+                if (expression is MemberAccessExpressionSyntax memberAccess)
+                {
+                    string target = memberAccess.Expression.ToString();
+                    string method = memberAccess.Name.ToString();
+
+                    // Pokud je cílem vytvoření nového objektu: new Class()
+                    if (memberAccess.Expression is ObjectCreationExpressionSyntax objCreation)
+                    {
+                        string typeName = objCreation.Type.ToString();
+                        calls.Add($"{typeName}.{method}");
+                    }
+                    // Pokud je cílem známé pole/proměnná z mapy
+                    else if (memberMap.TryGetValue(target.TrimStart('_'), out var mappedType))
+                    {
+                        calls.Add($"{mappedType}.{method}");
+                    }
+                    else
+                    {
+                        calls.Add($"{target}.{method}");
+                    }
+                }
+                else
+                {
+                    // Jednoduché volání v rámci třídy
+                    calls.Add(expression.ToString());
+                }
             }
 
             return calls;
