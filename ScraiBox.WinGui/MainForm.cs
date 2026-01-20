@@ -167,15 +167,41 @@ namespace ScraiBox.WinGui
             }
         }
 
-        private void Log(string message)
+        private void Log(string message, Exception? ex = null)
         {
-            // WinForms vyžaduje Invoke, pokud logujeme z jiného vlákna
             if (lstLogs.InvokeRequired)
             {
-                lstLogs.Invoke(() => Log(message));
+                lstLogs.Invoke(() => Log(message, ex));
                 return;
             }
-            lstLogs.Items.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {message}");
+
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            lstLogs.Items.Insert(0, $"[{timestamp}] {message}");
+
+            if (ex != null)
+            {
+                WriteToLogFile(message, ex);
+                lstLogs.Items.Insert(0, $"[{timestamp}] ⚠️ Stacktrace saved to error.log");
+            }
+        }
+
+        private void WriteToLogFile(string message, Exception ex)
+        {
+            try
+            {
+                // AppContext.BaseDirectory je nejbezpečnější cesta pro spouštěcí složku
+                string logPath = Path.Combine(AppContext.BaseDirectory, "error.log");
+                string logContent = $"--- {DateTime.Now} ---\n" +
+                                    $"Message: {message}\n" +
+                                    $"Exception: {ex.Message}\n" +
+                                    $"TargetSite: {ex.TargetSite}\n" +
+                                    $"Stack Trace:\n{ex.StackTrace}\n" +
+                                    (ex.InnerException != null ? $"Inner Exception: {ex.InnerException.Message}\n" : "") +
+                                    new string('=', 40) + "\n";
+
+                File.AppendAllText(logPath, logContent);
+            }
+            catch { /* Pokud selže i logování, raději tiše mlčet */ }
         }
     }
 }

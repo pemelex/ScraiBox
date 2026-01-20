@@ -9,7 +9,7 @@ namespace ScraiBox.Plugin.UC.Implementation
     public class DeepContextTracerUseCase : IUseCasePlugin
     {
         private readonly AdvancedRoslynService _roslynService;
-        private readonly int _maxDepth = 3; // Bezpečnostní pojistka proti nekonečné rekurzi
+        private readonly int _maxDepth = 4; // Bezpečnostní pojistka proti nekonečné rekurzi
 
         public string Name => "DeepContextTracer";
 
@@ -38,7 +38,9 @@ namespace ScraiBox.Plugin.UC.Implementation
             _roslynService.InitializeFromInventory(context.Inventory!, context.ProjectRootPath);
 
             var visitedMethods = new HashSet<string>();
-            var traceOutput = new StringBuilder();
+
+            string projectName = new DirectoryInfo(context.ProjectRootPath).Name;
+            using var traceOutput = new TraceWriter(projectName);
 
             traceOutput.AppendLine($"# DEEP CONTEXT TRACE: {startClass}.{startMethod}");
             traceOutput.AppendLine($"Generated: {DateTime.Now}");
@@ -58,7 +60,7 @@ namespace ScraiBox.Plugin.UC.Implementation
             };
         }
 
-        private async Task TraceRecursive(string className, string methodName, int depth, HashSet<string> visited, StringBuilder output)
+        private async Task TraceRecursive(string className, string methodName, int depth, HashSet<string> visited, TraceWriter output)
         {
             string fullId = $"{className}.{methodName}";
 
