@@ -130,7 +130,9 @@ namespace ScraiBox.WinGui
             }
             catch (Exception ex)
             {
-                Log($"❌ UC Error: {ex.Message}");
+                Log($"❌ ERROR: {ex.Message}");
+                Log($"📍 SOURCE: {ex.TargetSite}");
+                Log($"📜 STACK: {ex.StackTrace}");
             }
         }
 

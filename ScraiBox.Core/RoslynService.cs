@@ -53,6 +53,7 @@ namespace ScraiBox.Core
                     break;
             }
         }
+
         /// <summary>
         /// Finds a method within a specific class and extracts its calls.
         /// </summary>
@@ -91,32 +92,38 @@ namespace ScraiBox.Core
             {
                 var expression = invocation.Expression;
 
-                // Případ: new SomeUseCase().ExecuteAsync(...)
+                // Případ: instance.Metoda() nebo new Třída().Metoda()
                 if (expression is MemberAccessExpressionSyntax memberAccess)
                 {
-                    string target = memberAccess.Expression.ToString();
-                    string method = memberAccess.Name.ToString();
+                    string target = memberAccess.Expression?.ToString() ?? "";
+                    string method = memberAccess.Name?.ToString() ?? "";
 
-                    // Pokud je cílem vytvoření nového objektu: new Class()
+                    if (string.IsNullOrEmpty(method)) continue;
+
+                    // 1. Ošetření "new Class().Method()"
                     if (memberAccess.Expression is ObjectCreationExpressionSyntax objCreation)
                     {
-                        string typeName = objCreation.Type.ToString();
-                        calls.Add($"{typeName}.{method}");
+                        calls.Add($"{objCreation.Type}.{method}");
                     }
-                    // Pokud je cílem známé pole/proměnná z mapy
-                    else if (memberMap.TryGetValue(target.TrimStart('_'), out var mappedType))
+                    // 2. Ošetření mapovaných členů (_service.Method())
+                    else if (!string.IsNullOrEmpty(target) && memberMap.TryGetValue(target.TrimStart('_'), out var mappedType))
                     {
                         calls.Add($"{mappedType}.{method}");
                     }
-                    else
+                    // 3. Ostatní (statická volání nebo neznámé instance)
+                    else if (!string.IsNullOrEmpty(target))
                     {
                         calls.Add($"{target}.{method}");
                     }
                 }
                 else
                 {
-                    // Jednoduché volání v rámci třídy
-                    calls.Add(expression.ToString());
+                    // Jednoduché volání: Metoda() bez tečky
+                    var simpleName = expression?.ToString();
+                    if (!string.IsNullOrEmpty(simpleName))
+                    {
+                        calls.Add(simpleName);
+                    }
                 }
             }
 
